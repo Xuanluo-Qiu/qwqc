@@ -5,7 +5,7 @@
 
 /*
 ** Run this Test
-** cc ../src/main.c ../src/qlex.c ../src/qerr.c -I../include -o test_lexer
+** cc ../src/qwqc.c ../src/qlex.c ../src/qerr.c -I../include -o test_lexer
 ** ./test_lexer
 ** ./test_lexer ./inputs/input01.txt
 ** ./test_lexer ./inputs/input02.txt

@@ -1,13 +1,12 @@
 #include "qlex.h"
 #include "qerr.h"
+#include <_printf.h>
+#include <_stdlib.h>
 
 // 表实现
-TokenMap token_map[5] = {
-    {'+', Q_T_PLUS},
-    {'-', Q_T_MINUS},
-    {'*', Q_T_STAR},
-    {'/', Q_T_SLASH},
-    {0, 0} // 结束标记
+QWQC_TokenMap token_map[6] = {
+    {EOF, Q_T_EOF},  {'+', Q_T_PLUS},  {'-', Q_T_MINUS},
+    {'*', Q_T_STAR}, {'/', Q_T_SLASH}, {0, 0} // 结束标记
 };
 
 // 对比字符串s里有没有字符c
@@ -30,7 +29,7 @@ static int QWQC_LexerNext(QWQC_LexerContext *ctx) {
   ** 2. 避免字符丢失
   ** 例如，当解析到 123+45 时：
   ** 读取 '1' → 继续读取 '2' → 读取 '3' → 发现 + 不属于数字，需将 +
-  *回退以便后续处理运算符
+  ** 回退以便后续处理运算符
   */
   if (ctx->putback) {
     c = ctx->putback;
@@ -49,17 +48,17 @@ static int QWQC_LexerNext(QWQC_LexerContext *ctx) {
 }
 
 // 字符回退机制
-static void QWQC_LexerPutback(QWQC_LexerContext *ctx, int c) {
-  ctx->putback = c;
+static void QWQC_LexerPutback(QWQC_LexerContext *clx, int c) {
+  clx->putback = c;
 }
 
 // 跳过没用的字符
-static int QWQC_LexerSkip(QWQC_LexerContext *ctx) {
+static int QWQC_LexerSkip(QWQC_LexerContext *clx) {
   int c;
 
-  c = QWQC_LexerNext(ctx);
+  c = QWQC_LexerNext(clx);
   while (' ' == c || '\t' == c || '\n' == c || '\r' == c || '\f' == c) {
-    c = QWQC_LexerNext(ctx);
+    c = QWQC_LexerNext(clx);
   }
 
   return c;
@@ -67,47 +66,46 @@ static int QWQC_LexerSkip(QWQC_LexerContext *ctx) {
 
 // 让我看看你是不是INT!
 // 其中c是next()输出的字符
-static int QWQC_LexerScanInt(QWQC_LexerContext *ctx, int c) {
+static int QWQC_LexerScanInt(QWQC_LexerContext *clx, int c) {
   int val = 0;
 
   int k;
   while ((k = QWQC_LexerChrpos("0123456789", c)) >= 0) {
     val = val * 10 + k; // 十进制数的位权展开，我也不知道是啥
-    c = QWQC_LexerNext(ctx);
+    c = QWQC_LexerNext(clx);
   }
 
-  QWQC_LexerPutback(ctx, c);
+  QWQC_LexerPutback(clx, c);
   return val;
 }
 
-int QWQC_LexerScan(QWQC_LexerContext *ctx, struct qwqc_token *t) {
+int QWQC_LexerScan(QWQC_LexerContext *clx) {
   int c;
 
   // 跳过没用的字符
-  c = QWQC_LexerSkip(ctx);
-
-  // 文件结束啦!!
-  if (c == EOF) {
-    return QWQC_ERR_OK;
-  }
-
-  // 如果是数字
-  if (isdigit(c)) {
-    t->intval = QWQC_LexerScanInt(ctx, c);
-    t->token = Q_T_INTLIT;
-    return QWQC_ERR_TOKEN_OK;
-  }
+  c = QWQC_LexerSkip(clx);
 
   // 查找运算符映射表
   // 为啥不用switch?
   // 因为找表很现（装）代（B）
   for (int i = 0; token_map[i].ch != 0; i++) {
     if (token_map[i].ch == c) {
-      t->token = token_map[i].token;
+      clx->token.token = token_map[i].token;
       return QWQC_ERR_TOKEN_OK;
     }
   }
 
-  // We found a token
-  return QWQC_ERR_TOKEN_OK;
+  // 如果是数字
+  if (isdigit(c)) {
+    clx->token.intval = QWQC_LexerScanInt(clx, c);
+    clx->token.token = Q_T_INTLIT;
+    return QWQC_ERR_TOKEN_OK;
+  }
+
+  // 文件结束啦!!
+  if (c == EOF) {
+    return QWQC_ERR_OK;
+  }
+
+  exit(QWQC_GetError(QWQC_ERR_TOKEN_UNKNOWN));
 }
