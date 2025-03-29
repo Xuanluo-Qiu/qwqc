@@ -33,7 +33,8 @@ typedef struct QWQC_AstMap {
 // AST运算符映射表
 extern QWQC_AstMap ast_map[5];
 
-QWQC_AstNode *QWQC_MakeAstNode(); // 创建一个空的AST节点
+QWQC_AstNode *QWQC_MakeAstNode(int op, QWQC_AstNode *left, QWQC_AstNode *right,
+                               int intval); // 创建一个空节点
 QWQC_AstNode *QWQC_MakeAstLeaf(int op, int intval); // 创建一个叶子节点
 QWQC_AstNode *QWQC_MakeAstUnary(int op, QWQC_AstNode *left,
                                 int intval); // 创建一个一元操作节点

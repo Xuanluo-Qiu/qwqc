@@ -22,8 +22,8 @@ int main(int argc, char *argv[]) {
   }
 
   QWQC_LexerScan(&clx);
-  root = QWQC_AstBinExpr(&clx);
+  root = QWQC_AstBinExpr(&clx, 0);
   printf("%d\n", QWQC_ExprInterPretAst(root));
 
-  return 0;
+  return QWQC_ERR_OK;
 }

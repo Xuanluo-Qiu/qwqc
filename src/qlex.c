@@ -1,7 +1,4 @@
 #include "qlex.h"
-#include "qerr.h"
-#include <_printf.h>
-#include <_stdlib.h>
 
 // 表实现
 QWQC_TokenMap token_map[6] = {
